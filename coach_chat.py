@@ -63,6 +63,33 @@ def get_detailed_strava_context():
     except Exception as e:
         return f"Kunde inte hämta detaljerad info från Strava: {e}"
 
+# --- HÄR KLISTRAR DU IN DEN NYA FUNKTIONEN ---
+def get_six_months_history():
+    try:
+        u = "https://www.strava.com/oauth/token"
+        p = {'client_id': STRAVA_CLIENT_ID, 'client_secret': STRAVA_CLIENT_SECRET, 
+             'refresh_token': REFRESH_TOKEN, 'grant_type': 'refresh_token'}
+        access_token = requests.post(u, data=p).json()['access_token']
+        
+        # Timestamp för 6 månader sedan
+        six_months_ago = int(time.time()) - (180 * 24 * 60 * 60)
+        
+        url = "https://www.strava.com/api/v3/athlete/activities"
+        headers = {'Authorization': f'Bearer {access_token}'}
+        params = {'after': six_months_ago, 'per_page': 200}
+        activities = requests.get(url, headers=headers, params=params).json()
+        
+        history_summary = ""
+        for act in activities:
+            if act['type'] == 'Run':
+                date = act['start_date_local'][:10]
+                dist = act['distance'] / 1000
+                history_summary += f"- {date}: {dist:.1f}km, Puls: {act.get('average_heartrate', 'N/A')}\n"
+        
+        return history_summary
+    except Exception as e:
+        return f"Kunde inte hämta historik: {e}"
+
 # --- 3. CHATT-GRÄNSSNITT ---
 st.set_page_config(page_title="AI Löpcoach Pro", page_icon="🏃‍♂️")
 st.title("🏃‍♂️ Din Personliga Löpcoach Pro")
