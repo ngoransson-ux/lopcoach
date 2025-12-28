@@ -94,6 +94,28 @@ def get_six_months_history():
 st.set_page_config(page_title="AI Löpcoach Pro", page_icon="🏃‍♂️")
 st.title("🏃‍♂️ Din Personliga Löpcoach Pro")
 
+st.set_page_config(page_title="AI Löpcoach Pro", page_icon="🏃‍♂️")
+st.title("🏃‍♂️ Din Personliga Löpcoach Pro")
+
+# --- HÄR KLISTRAR DU IN KNAPPEN ---
+with st.sidebar:
+    st.header("Träningshistorik")
+    if st.button("Analysera senaste 6 månaderna"):
+        with st.spinner("Analyserar trender..."):
+            history = get_six_months_history()
+            prompt_history = f"Här är min löphistorik senaste 6 månaderna:\n{history}\nAnalysera min utveckling, volym och puls-trender på svenska."
+            
+            response = client.models.generate_content(
+                model='gemini-2.5-flash', 
+                contents=prompt_history
+            )
+            st.success("### Historisk Analys")
+            st.write(response.text)
+# ----------------------------------
+
+if "messages" not in st.session_state:
+
+
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "assistant", "content": "Hej! Jag har nu tillgång till din detaljerade puls- och tempodata. Fråga mig vad du vill om ditt senaste pass!"}
