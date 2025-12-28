@@ -130,14 +130,14 @@ if prompt := st.chat_input("Skriv till coachen..."):
             idag = date.today()
             running_data = get_detailed_strava_context()
             system_instruction = (
-                f"Idag är det {idag}. "Du är en expert-coach specialiserad på halvmaraton. Ditt mål är att hjälpa användaren att "
-                "springa under 1:30:00 (vilket innebär ett tempo på 4:15 min/km) den 23 maj 2026.\n\n"
+                f"Idag är det {idag}. Du är en expert-coach specialiserad på halvmaraton. "
+                "Ditt mål är att hjälpa användaren att springa under 1:30:00 (tempo 4:15 min/km) den 23 maj 2026.\n\n"
                 f"Här är data från senaste passet:\n{running_data}\n\n"
                 "Din uppgift:\n"
-                "1. Analysera passet baserat på målet (1:30 på halvmaran).\n"
-                "2. Om passet var snabbt: Jämför tempot med tävlingstempot på 4:15.\n"
-                "3. Om passet var lugnt: Bedöm om pulsen var tillräckligt låg för att bygga uthållighet.\n"
-                "4. Berätta hur många veckor det är kvar till 23 maj (räknat från idag).\n"
+                f"1. Berätta först hur många veckor det är kvar från idag ({idag}) till tävlingen den 23 maj 2026.\n"
+                "2. Analysera passet baserat på målet (1:30 på halvmaran).\n"
+                "3. Om passet var snabbt: Jämför tempot med tävlingstempot på 4:15.\n"
+                "4. Om passet var lugnt: Bedöm om pulsen var tillräckligt låg för att bygga uthållighet.\n"
                 "5. Var peppande men professionell och ärlig. Svara på svenska."
             )
             
