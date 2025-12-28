@@ -130,17 +130,19 @@ if prompt := st.chat_input("Skriv till coachen..."):
     with st.chat_message("assistant"):
         with st.spinner("Tänker..."):
             idag = date.today()
-            running_data = get_detailed_strava_context()
+            # Vi hämtar BÅDE senaste passet och historiken i bakgrunden
+            latest_run = get_detailed_strava_context()
+            history = get_six_months_history()
+            
             system_instruction = (
-                f"Idag är det {idag}. Du är en expert-coach specialiserad på halvmaraton. "
-                "Ditt mål är att hjälpa användaren att springa under 1:30:00 (tempo 4:15 min/km) den 23 maj 2026.\n\n"
-                f"Här är data från senaste passet:\n{running_data}\n\n"
-                "Din uppgift:\n"
-                f"1. Berätta först hur många veckor det är kvar från idag ({idag}) till tävlingen den 23 maj 2026.\n"
-                "2. Analysera passet baserat på målet (1:30 på halvmaran).\n"
-                "3. Om passet var snabbt: Jämför tempot med tävlingstempot på 4:15.\n"
-                "4. Om passet var lugnt: Bedöm om pulsen var tillräckligt låg för att bygga uthållighet.\n"
-                "5. Var peppande men professionell och ärlig. Svara på svenska."
+                f"Idag är det {idag}. Du är en personlig löpcoach. Din adept tränar för 1:30 på halvmaran den 23 maj 2026.\n"
+                f"Du har tillgång till historik (6 mån): \n{history}\n"
+                f"Du har tillgång till senaste passet: \n{latest_run}\n\n"
+                "VIKTIGA INSTRUKTIONER:\n"
+                "1. Var konversationsinriktad. Prata som en vanlig människa.\n"
+                "2. TJATA INTE om senaste passet i varje svar. Nämn det bara om användaren frågar eller om det är relevant för samtalet.\n"
+                "3. Använd historiken för att svara på frågor om trender, rekord eller specifika datum.\n"
+                "4. Om användaren bara vill snacka löpning, skor eller motivation – gör det utan att rabbla statistik."
             )
             
             try:
