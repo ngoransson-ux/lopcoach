@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 from google import genai
 import time
+from datetime import date
 
 # --- NYTT: LÖSENORDSSKYDD ---
 def check_password():
@@ -126,9 +127,10 @@ if prompt := st.chat_input("Skriv till coachen..."):
 
     with st.chat_message("assistant"):
         with st.spinner("Tänker..."):
+            idag = date.today()
             running_data = get_detailed_strava_context()
             system_instruction = (
-                "Du är en expert-coach specialiserad på halvmaraton. Ditt mål är att hjälpa användaren att "
+                f"Idag är det {idag}. "Du är en expert-coach specialiserad på halvmaraton. Ditt mål är att hjälpa användaren att "
                 "springa under 1:30:00 (vilket innebär ett tempo på 4:15 min/km) den 23 maj 2026.\n\n"
                 f"Här är data från senaste passet:\n{running_data}\n\n"
                 "Din uppgift:\n"
@@ -138,6 +140,7 @@ if prompt := st.chat_input("Skriv till coachen..."):
                 "4. Berätta hur många veckor det är kvar till 23 maj (räknat från idag).\n"
                 "5. Var peppande men professionell och ärlig. Svara på svenska."
             )
+            
             try:
                 response = client.models.generate_content(
                     model='gemini-2.5-flash',
