@@ -6,7 +6,7 @@ import time
 # --- 1. KONFIGURATION ---
 STRAVA_CLIENT_ID = "177985"
 STRAVA_CLIENT_SECRET = "2b3cf9adfae953c2716e0e10ef288d0eb26e4c9b"
-GEMINI_API_KEY = "AIzaSyAPFas1aeurXsPAqz6nI8mhObta316fvY4"
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 REFRESH_TOKEN = "3708e8d1bcce1c05cfd864bdc4afd47bf166aed7"
 
 client = genai.Client(api_key=GEMINI_API_KEY)
