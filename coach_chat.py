@@ -89,10 +89,12 @@ def get_six_months_history():
             if act['type'] == 'Run':
                 date = act['start_date_local'][:10]
                 dist = act['distance'] / 1000
-                history_summary += f"- {date}: {dist:.1f}km, Puls: {act.get('average_heartrate', 'N/A')}\n"
+                # Räkna ut tempo (min/km)
+                tempo = (act['moving_time'] / 60) / dist if dist > 0 else 0
+                history_summary += f"- {date}: {dist:.2f}km, Tempo: {tempo:.2f} min/km, Puls: {act.get('average_heartrate', 'N/A')}\n"
         return history_summary
     except Exception as e:
-        return f"Kunde inte hämta historik: {e}"
+        return "Historik ej tillgänglig."
 
 # --- 3. GRÄNSSNITT ---
 st.set_page_config(page_title="AI Löpcoach Pro", page_icon="🏃‍♂️")
