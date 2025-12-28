@@ -3,6 +3,29 @@ import requests
 from google import genai
 import time
 
+# --- NYTT: LÖSENORDSSKYDD ---
+def check_password():
+    """Returnerar True om användaren har skrivit rätt lösenord."""
+    if "password_correct" not in st.session_state:
+        st.session_state.password_correct = False
+
+    if not st.session_state.password_correct:
+        # Visa en ruta där man skriver lösenord
+        user_password = st.text_input("Lösenord för löpcoachen:", type="password")
+        if st.button("Logga in"):
+            # VÄLJ DITT LÖSENORD HÄR (eller lägg det i st.secrets för extra säkerhet)
+            if user_password == "Melker17": 
+                st.session_state.password_correct = True
+                st.rerun()
+            else:
+                st.error("Fel lösenord!")
+        return False
+    return True
+
+# Om lösenordet inte är rätt, stoppa resten av appen från att köras
+if not check_password():
+    st.stop()
+
 # --- 1. KONFIGURATION ---
 STRAVA_CLIENT_ID = "177985"
 STRAVA_CLIENT_SECRET = st.secrets["STRAVA_CLIENT_SECRET"]
