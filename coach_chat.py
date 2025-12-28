@@ -14,7 +14,7 @@ def check_password():
         user_password = st.text_input("Lösenord för löpcoachen:", type="password")
         if st.button("Logga in"):
             # VÄLJ DITT LÖSENORD HÄR (eller lägg det i st.secrets för extra säkerhet)
-            if user_password == "Melker17": 
+            if user_password == st.secrets["APP_PASSWORD"]: 
                 st.session_state.password_correct = True
                 st.rerun()
             else:
