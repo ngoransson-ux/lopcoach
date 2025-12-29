@@ -112,8 +112,10 @@ with st.sidebar:
             st.write(response.text)
             st.markdown("---")
     if st.button("🚀 Vad ska jag köra nästa pass?"):
-        # Detta simulerar att du skriver frågan i chatten
-        st.session_state.messages.append({"role": "user", "content": "Baserat på min data och mitt mål, vad föreslår du att jag kör för nästa pass? Ge mig ett specifikt pass med distans, tempo och förklaring."})
+        st.session_state.messages.append({
+            "role": "user", 
+            "content": "Baserat på min data och mitt mål, vad föreslår du att jag kör för nästa pass? Ge mig ett specifikt pass med distans, tempo och förklaring."
+        })
         st.rerun()
 
 # Chat-historik
@@ -126,67 +128,59 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Hantera chat-input
-# Hantera chat-input
-if prompt := st.chat_input("Skriv till coachen..."):
-    # Lägg till användarens fråga i historiken
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+# --- 3. HANTERA INPUT OCH SVAR ---
 
+# 1. Lyssna på om användaren skriver något i textrutan
+prompt = st.chat_input("Skriv till coachen...")
+if prompt:
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.rerun() # Vi startar om direkt för att visa användarens text
+
+# 2. Kontrollera om det sista meddelandet i historiken kommer från användaren.
+# Om det gör det (oavsett om det kom från knappen eller rutan) så ska AI:n svara.
+if len(st.session_state.messages) > 0 and st.session_state.messages[-1]["role"] == "user":
     with st.chat_message("assistant"):
         with st.spinner("Hämtar data och tänker..."):
-            # 1. Skapa alla variabler FÖRST
+            # Hämta variabler och data
             idag = date.today()
-            
-            # Hämta data från dina funktioner
             running_data = get_detailed_strava_context()
             history_data = get_six_months_history()
-            
-            # Beräkna veckor kvar
             tavlingsdatum = date(2026, 5, 23)
             veckor_kvar = (tavlingsdatum - idag).days // 7
 
-            # 2. NU skapar vi instruktionen (eftersom variablerna ovan nu existerar)
+            # Skapa instruktionen till AI:n
             system_instruction = (
                 f"Idag är det {idag}. Du är en elit-löpcoach. Din adept tränar för att springa "
                 f"en halvmaraton under 1:30:00 (4:15 min/km tempo) den 23 maj 2026.\n"
                 f"Det är just nu {veckor_kvar} veckor kvar till tävlingen.\n\n"
-                
-                f"DATA TILLGÄNGLIG FÖR DIG:\n"
-                f"1. Senaste passet (inkl. detaljer & privata noter): {running_data}\n"
-                f"2. Historik (6 månader bakåt): {history_data}\n\n"
-                
-                "DINA INSTRUKTIONER:\n"
-                "- Var konversationsinriktad och kom ihåg tidigare dialoger.\n"
-                "- Läs alltid de privata noteringarna för att se hur kroppen känns (skador/trötthet).\n"
-                "- Tjata inte om statistik i varje svar, men använd den när det är relevant.\n\n"
-                
-                "NÄR ANVÄNDAREN FRÅGAR OM NÄSTA PASS:\n"
-                "Ge ett specifikt förslag baserat på modern träningslära (t.ex. 80/20-regeln):\n"
-                "1. TYP: Intervaller, Tempolopp, Långpass eller Återhämtning.\n"
-                "2. DISTANS/TID: Exakt antal km eller minuter.\n"
-                "3. INTENSITET: Måltempo och puls-zon.\n"
-                "4. VARFÖR: Förklara hur passet bygger formen mot 1:30-målet.\n\n"
-                "Svara alltid på peppande svenska."
+                f"DATA TILLGÄNGLIG:\n1. Senaste passet: {running_data}\n2. Historik: {history_data}\n\n"
+                "INSTRUKTIONER:\n- Var konversationsinriktad.\n- Läs privata noter om skador/trötthet.\n"
+                "- Om frågan gäller nästa pass: Ge specifik TYP, DISTANS, TEMPO och VARFÖR.\n"
+                "- Svara på peppande svenska."
             )
 
-            # 3. Förbered chatthistoriken för Gemini
+            # Förbered historiken för Gemini (allt utom det sista meddelandet)
             history_for_api = []
             for msg in st.session_state.messages[:-1]:
                 role = "user" if msg["role"] == "user" else "model"
                 history_for_api.append({"role": role, "parts": [{"text": msg["content"]}]})
 
             try:
-                # 4. Skicka till Gemini
+                # Skicka det senaste användarmeddelandet till Gemini
+                last_user_msg = st.session_state.messages[-1]["content"]
+                
                 response = client.models.generate_content(
                     model='gemini-2.5-flash',
                     config={'system_instruction': system_instruction},
-                    contents=history_for_api + [{"role": "user", "parts": [{"text": prompt}]}]
+                    contents=history_for_api + [{"role": "user", "parts": [{"text": last_user_msg}]}]
                 )
                 
                 ai_response = response.text
                 st.markdown(ai_response)
+                # Spara AI:ns svar i historiken
                 st.session_state.messages.append({"role": "assistant", "content": ai_response})
+                # Rerun för att "låsa" chatten snyggt
+                st.rerun()
+                
             except Exception as e:
                 st.error(f"AI-fel: {e}")
