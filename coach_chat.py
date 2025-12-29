@@ -39,37 +39,37 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 
 def get_detailed_strava_context():
     try:
+        # 1. Access Token
         u = "https://www.strava.com/oauth/token"
         p = {'client_id': STRAVA_CLIENT_ID, 'client_secret': STRAVA_CLIENT_SECRET, 
              'refresh_token': REFRESH_TOKEN, 'grant_type': 'refresh_token'}
-        token_response = requests.post(u, data=p).json()
-        access_token = token_response['access_token']
+        access_token = requests.post(u, data=p).json()['access_token']
         
+        # 2. Hämta ID för senaste passet
         list_url = "https://www.strava.com/api/v3/athlete/activities"
         headers = {'Authorization': f'Bearer {access_token}'}
         latest_act = requests.get(list_url, headers=headers, params={'per_page': 1}).json()[0]
         activity_id = latest_act['id']
 
+        # 3. Hämta DETALJERAD data (här finns Private Note)
         detail_url = f"https://www.strava.com/api/v3/activities/{activity_id}"
         data = requests.get(detail_url, headers=headers).json()
         
+        # 4. Hämta ut data inklusive din privata anteckning
         dist = data.get('distance', 0) / 1000
         tid = data.get('moving_time', 0) / 60
-        puls_avg = data.get('average_heartrate', 'N/A')
-        puls_max = data.get('max_heartrate', 'N/A')
-        kadens = data.get('average_cadence', 'N/A')
-        stigning = data.get('total_elevation_gain', 0)
+        puls = data.get('average_heartrate', 'N/A')
+        # HÄR HÄMTAR VI DIN PRIVATA ANTECKNING
+        privat_notering = data.get('private_note', 'Ingen anteckning gjord.')
         
-        splits = ""
-        if 'splits_metric' in data:
-            for s in data['splits_metric']:
-                splits += f"Km {s['split']}: {round(s['moving_time']/60, 2)} min/km. "
-
-        return (f"Passets namn: {data.get('name')}\nDistans: {dist:.2f} km\nTotal tid: {tid:.1f} min\n"
-                f"Snittpuls: {puls_avg} bpm, Maxpuls: {puls_max} bpm\nKadens: {kadens}\nHöjd: {stigning}m\n"
-                f"Kilometertider: {splits}")
+        context = (
+            f"Pass: '{data.get('name')}'\n"
+            f"Distans: {dist:.2f}km, Tid: {tid:.1f}min, Puls: {puls}\n"
+            f"Användarens privata anteckning för detta pass: {privat_notering}"
+        )
+        return context
     except Exception as e:
-        return f"Kunde inte hämta detaljerad info: {e}"
+        return f"Kunde inte hämta data: {e}"
 
 def get_six_months_history():
     try:
@@ -142,7 +142,11 @@ if prompt := st.chat_input("Skriv till coachen..."):
                 "1. Var konversationsinriktad. Prata som en vanlig människa.\n"
                 "2. TJATA INTE om senaste passet i varje svar. Nämn det bara om användaren frågar eller om det är relevant för samtalet.\n"
                 "3. Använd historiken för att svara på frågor om trender, rekord eller specifika datum.\n"
-                "4. Om användaren bara vill snacka löpning, skor eller motivation – gör det utan att rabbla statistik."
+                "4. Om användaren bara vill snacka löpning, skor eller motivation – gör det utan att rabbla statistik." 
+                "VIKTIGT: Läs användarens privata anteckning noga. Det är där användaren skriver "
+                "hur kroppen känns, eventuella skador eller tankar. Använd detta för att föra ett "
+                "smart och resonerande samtal. Om användaren nämner en skada i anteckningen, "
+                "följ upp det i ditt svar!"
             )
             
             try:
