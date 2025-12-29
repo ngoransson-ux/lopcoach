@@ -110,6 +110,11 @@ with st.sidebar:
             response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt_history)
             st.success("### Historisk Analys")
             st.write(response.text)
+            st.markdown("---")
+    if st.button("🚀 Vad ska jag köra nästa pass?"):
+        # Detta simulerar att du skriver frågan i chatten
+        st.session_state.messages.append({"role": "user", "content": "Baserat på min data och mitt mål, vad föreslår du att jag kör för nästa pass? Ge mig ett specifikt pass med distans, tempo och förklaring."})
+        st.rerun()
 
 # Chat-historik
 if "messages" not in st.session_state:
