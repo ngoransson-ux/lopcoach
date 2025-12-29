@@ -127,23 +127,27 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 # Hantera chat-input
+# Hantera chat-input
 if prompt := st.chat_input("Skriv till coachen..."):
+    # Lägg till användarens fråga i historiken
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Tänker..."):
+        with st.spinner("Hämtar data och tänker..."):
+            # 1. Skapa alla variabler FÖRST
             idag = date.today()
-            # Vi hämtar BÅDE senaste passet och historiken i bakgrunden
-            latest_run = get_detailed_strava_context()
-            history = get_six_months_history()
             
-            # Beräkna veckor kvar för att ge AI:n tidsperspektiv
+            # Hämta data från dina funktioner
+            running_data = get_detailed_strava_context()
+            history_data = get_six_months_history()
+            
+            # Beräkna veckor kvar
             tavlingsdatum = date(2026, 5, 23)
             veckor_kvar = (tavlingsdatum - idag).days // 7
 
-            # HÄR ÄR DEN SAMMANSLAGNA INSTRUKTIONEN (Allt i ett)
+            # 2. NU skapar vi instruktionen (eftersom variablerna ovan nu existerar)
             system_instruction = (
                 f"Idag är det {idag}. Du är en elit-löpcoach. Din adept tränar för att springa "
                 f"en halvmaraton under 1:30:00 (4:15 min/km tempo) den 23 maj 2026.\n"
@@ -166,13 +170,23 @@ if prompt := st.chat_input("Skriv till coachen..."):
                 "4. VARFÖR: Förklara hur passet bygger formen mot 1:30-målet.\n\n"
                 "Svara alltid på peppande svenska."
             )
-            
+
+            # 3. Förbered chatthistoriken för Gemini
+            history_for_api = []
+            for msg in st.session_state.messages[:-1]:
+                role = "user" if msg["role"] == "user" else "model"
+                history_for_api.append({"role": role, "parts": [{"text": msg["content"]}]})
+
             try:
+                # 4. Skicka till Gemini
                 response = client.models.generate_content(
                     model='gemini-2.5-flash',
-                    contents=f"{system_instruction}\n\nFråga: {prompt}"
+                    config={'system_instruction': system_instruction},
+                    contents=history_for_api + [{"role": "user", "parts": [{"text": prompt}]}]
                 )
-                st.markdown(response.text)
-                st.session_state.messages.append({"role": "assistant", "content": response.text})
+                
+                ai_response = response.text
+                st.markdown(ai_response)
+                st.session_state.messages.append({"role": "assistant", "content": ai_response})
             except Exception as e:
                 st.error(f"AI-fel: {e}")
